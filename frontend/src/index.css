@@ -1,0 +1,92 @@
+/* ── Alerta Sofía — Estilos globales ────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: #020617;
+  color: #f1f5f9;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ── Inputs & Selects ──────────────────────────────────────────────── */
+input, select {
+  background: rgba(15, 23, 42, 0.95);
+  border: 1px solid #1e293b;
+  color: #f1f5f9;
+  border-radius: 6px;
+  padding: 7px 10px;
+  font-size: 12px;
+  width: 100%;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+}
+input:focus, select:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+  background: rgba(15, 23, 42, 1);
+}
+input:disabled, select:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+}
+input:not(:disabled):hover, select:not(:disabled):hover {
+  border-color: #334155;
+}
+select option { background: #0f172a; }
+
+/* ── Labels ────────────────────────────────────────────────────────── */
+label {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: #64748b;
+  display: block;
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+/* ── Timer digits (monospace, big, readable) ───────────────────────── */
+.timer-display {
+  font-family: 'Courier New', 'SF Mono', 'Fira Code', monospace;
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  font-variant-numeric: tabular-nums;
+}
+.timer-active {
+  color: #ef4444;
+  text-shadow: 0 0 12px rgba(239, 68, 68, 0.5), 0 0 24px rgba(239, 68, 68, 0.2);
+  animation: timer-pulse 1s ease-in-out infinite;
+}
+.timer-idle {
+  color: #f59e0b;
+  text-shadow: 0 0 8px rgba(245, 158, 11, 0.3);
+}
+
+/* ── Animations ────────────────────────────────────────────────────── */
+@keyframes blink        { 0%,100%{opacity:1}   50%{opacity:0.2} }
+@keyframes cursor       { 0%,100%{opacity:1}   50%{opacity:0}   }
+@keyframes timer-pulse  { 0%,100%{opacity:1}   50%{opacity:0.85} }
+@keyframes breach-flash {
+  0%,100% { border-color: rgba(239,68,68,0.35); background: rgba(127,29,29,0.25); }
+  50%     { border-color: rgba(239,68,68,0.75); background: rgba(127,29,29,0.40); }
+}
+@keyframes slide-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Scrollbar ─────────────────────────────────────────────────────── */
+::-webkit-scrollbar       { width: 4px; }
+::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 2px; }
+::-webkit-scrollbar-track { background: transparent; }
+
+/* ── Card hover glow ───────────────────────────────────────────────── */
+.card-glow {
+  transition: box-shadow 0.3s;
+}
+.card-glow:hover {
+  box-shadow: 0 0 0 1px #1e293b, 0 4px 20px rgba(0,0,0,0.4);
+}
