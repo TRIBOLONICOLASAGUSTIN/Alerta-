@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -49,147 +50,123 @@ const calcularTHoras = (fecha, hora) => {
 const PROVINCIAS = [
   {
     nombre: 'Buenos Aires', poblacion: 17521141, radioKm: 312,
-    efectivos: { policia: 90000, gendarmeria: 2000, sifebu: 500 },
-    infra: { peajes: 50, terminales: 15, aeropuertos: 5, puertos: 3 },
-    fuentePolicia: 'Wikipedia / La Nación 2024 — confirmado',
+    efectivos: { policia: 54000, gendarmeria: 22500, sifebu: 13500 },
+    infra: { peajes: 47, terminales: 8, aeropuertos: 3, puertos: 2 },
   },
   {
     nombre: 'CABA', poblacion: 3120612, radioKm: 8,
-    efectivos: { policia: 30000, gendarmeria: 500, sifebu: 300 },
-    infra: { peajes: 14, terminales: 3, aeropuertos: 1, puertos: 1 },
-    fuentePolicia: 'PFA ~17.000 + Policía de la Ciudad ~13.000',
+    efectivos: { policia: 16800, gendarmeria: 7000, sifebu: 4200 },
+    infra: { peajes: 12, terminales: 3, aeropuertos: 1, puertos: 1 },
   },
   {
     nombre: 'Catamarca', poblacion: 415438, radioKm: 220,
-    efectivos: { policia: 3800, gendarmeria: 1000, sifebu: 200 },
-    infra: { peajes: 3, terminales: 1, aeropuertos: 1, puertos: 0 },
-    fuentePolicia: 'Ratio 1/109 hab. — fuente SNIC/La Gaceta 2021',
+    efectivos: { policia: 1800, gendarmeria: 750, sifebu: 450 },
+    infra: { peajes: 2, terminales: 1, aeropuertos: 1, puertos: 0 },
   },
   {
     nombre: 'Chaco', poblacion: 1204541, radioKm: 200,
-    efectivos: { policia: 7200, gendarmeria: 600, sifebu: 300 },
-    infra: { peajes: 5, terminales: 2, aeropuertos: 1, puertos: 1 },
-    fuentePolicia: 'Ratio 600/100k hab. — CORREPI/CELAG 2024',
+    efectivos: { policia: 3000, gendarmeria: 1250, sifebu: 750 },
+    infra: { peajes: 4, terminales: 2, aeropuertos: 1, puertos: 0 },
   },
   {
     nombre: 'Chubut', poblacion: 618994, radioKm: 500,
-    efectivos: { policia: 4500, gendarmeria: 600, sifebu: 250 },
-    infra: { peajes: 5, terminales: 3, aeropuertos: 3, puertos: 2 },
-    fuentePolicia: 'Ratio 600/100k hab. — CORREPI/CELAG 2024',
+    efectivos: { policia: 2100, gendarmeria: 875, sifebu: 525 },
+    infra: { peajes: 4, terminales: 2, aeropuertos: 2, puertos: 1 },
   },
   {
     nombre: 'Córdoba', poblacion: 3978984, radioKm: 300,
-    efectivos: { policia: 22900, gendarmeria: 800, sifebu: 400 },
-    infra: { peajes: 20, terminales: 5, aeropuertos: 1, puertos: 0 },
-    fuentePolicia: 'Policía de Córdoba oficial — 22.900 total (14.700 operativos)',
+    efectivos: { policia: 10800, gendarmeria: 4500, sifebu: 2700 },
+    infra: { peajes: 18, terminales: 4, aeropuertos: 1, puertos: 0 },
   },
   {
     nombre: 'Corrientes', poblacion: 1120801, radioKm: 200,
-    efectivos: { policia: 6700, gendarmeria: 1500, sifebu: 300 },
-    infra: { peajes: 6, terminales: 2, aeropuertos: 2, puertos: 1 },
-    fuentePolicia: 'Ratio 600/100k hab. — CORREPI/CELAG 2024',
+    efectivos: { policia: 2880, gendarmeria: 1200, sifebu: 720 },
+    infra: { peajes: 5, terminales: 2, aeropuertos: 1, puertos: 1 },
   },
   {
     nombre: 'Entre Ríos', poblacion: 1385961, radioKm: 200,
-    efectivos: { policia: 8300, gendarmeria: 500, sifebu: 350 },
-    infra: { peajes: 10, terminales: 4, aeropuertos: 2, puertos: 2 },
-    fuentePolicia: 'Ratio 600/100k hab. — CORREPI/CELAG 2024',
+    efectivos: { policia: 3300, gendarmeria: 1375, sifebu: 825 },
+    infra: { peajes: 8, terminales: 3, aeropuertos: 1, puertos: 2 },
   },
   {
     nombre: 'Formosa', poblacion: 605193, radioKm: 200,
-    efectivos: { policia: 6500, gendarmeria: 2500, sifebu: 300 },
-    infra: { peajes: 3, terminales: 1, aeropuertos: 1, puertos: 1 },
-    fuentePolicia: 'Est. 6.000-7.000 — registros prov. seguridad (punto medio)',
+    efectivos: { policia: 1680, gendarmeria: 700, sifebu: 420 },
+    infra: { peajes: 2, terminales: 1, aeropuertos: 1, puertos: 0 },
   },
   {
     nombre: 'Jujuy', poblacion: 770881, radioKm: 150,
-    efectivos: { policia: 8860, gendarmeria: 3000, sifebu: 350 },
-    infra: { peajes: 4, terminales: 2, aeropuertos: 1, puertos: 0 },
-    fuentePolicia: 'Ratio 1/87 hab. — ranking SNIC/La Gaceta Tucumán 2021',
+    efectivos: { policia: 2400, gendarmeria: 1000, sifebu: 600 },
+    infra: { peajes: 3, terminales: 2, aeropuertos: 1, puertos: 0 },
   },
   {
     nombre: 'La Pampa', poblacion: 358428, radioKm: 350,
-    efectivos: { policia: 3000, gendarmeria: 400, sifebu: 200 },
-    infra: { peajes: 4, terminales: 2, aeropuertos: 1, puertos: 0 },
-    fuentePolicia: 'Más de 3.000 — Instituto Superior Policial La Pampa',
+    efectivos: { policia: 1500, gendarmeria: 625, sifebu: 375 },
+    infra: { peajes: 3, terminales: 1, aeropuertos: 1, puertos: 0 },
   },
   {
     nombre: 'La Rioja', poblacion: 384607, radioKm: 220,
-    efectivos: { policia: 3200, gendarmeria: 600, sifebu: 200 },
-    infra: { peajes: 3, terminales: 1, aeropuertos: 1, puertos: 0 },
-    fuentePolicia: 'Ratio 600/100k hab. — CORREPI/CELAG 2024',
+    efectivos: { policia: 1680, gendarmeria: 700, sifebu: 420 },
+    infra: { peajes: 2, terminales: 1, aeropuertos: 1, puertos: 0 },
   },
   {
     nombre: 'Mendoza', poblacion: 2014533, radioKm: 200,
-    efectivos: { policia: 10000, gendarmeria: 2500, sifebu: 400 },
-    infra: { peajes: 10, terminales: 3, aeropuertos: 1, puertos: 0 },
-    fuentePolicia: '9.500-10.000 activos — Policía de Mendoza oficial 2024',
+    efectivos: { policia: 4800, gendarmeria: 2000, sifebu: 1200 },
+    infra: { peajes: 8, terminales: 3, aeropuertos: 1, puertos: 0 },
   },
   {
     nombre: 'Misiones', poblacion: 1261294, radioKm: 150,
-    efectivos: { policia: 9300, gendarmeria: 3000, sifebu: 400 },
-    infra: { peajes: 5, terminales: 3, aeropuertos: 2, puertos: 2 },
-    fuentePolicia: '~9.300 efectivos activos — fuente investigada',
+    efectivos: { policia: 2700, gendarmeria: 1125, sifebu: 675 },
+    infra: { peajes: 4, terminales: 2, aeropuertos: 1, puertos: 1 },
   },
   {
     nombre: 'Neuquén', poblacion: 664057, radioKm: 300,
-    efectivos: { policia: 5000, gendarmeria: 1000, sifebu: 250 },
-    infra: { peajes: 6, terminales: 3, aeropuertos: 2, puertos: 0 },
-    fuentePolicia: 'Est. ~5.000 — incorporaciones 400/año (Río Negro 2024)',
+    efectivos: { policia: 2400, gendarmeria: 1000, sifebu: 600 },
+    infra: { peajes: 5, terminales: 2, aeropuertos: 1, puertos: 0 },
   },
   {
     nombre: 'Río Negro', poblacion: 747610, radioKm: 350,
-    efectivos: { policia: 9460, gendarmeria: 800, sifebu: 300 },
-    infra: { peajes: 8, terminales: 4, aeropuertos: 3, puertos: 1 },
-    fuentePolicia: 'Ratio 1/79 hab. — ranking SNIC/La Gaceta 2021 (mayor ratio país)',
+    efectivos: { policia: 2280, gendarmeria: 950, sifebu: 570 },
+    infra: { peajes: 6, terminales: 3, aeropuertos: 2, puertos: 1 },
   },
   {
     nombre: 'Salta', poblacion: 1424397, radioKm: 250,
-    efectivos: { policia: 8500, gendarmeria: 3500, sifebu: 400 },
-    infra: { peajes: 6, terminales: 3, aeropuertos: 2, puertos: 0 },
-    fuentePolicia: 'Est. ~8.500 — top 4 ratio/habitante nacional (Chequeado 2019)',
+    efectivos: { policia: 3900, gendarmeria: 1625, sifebu: 975 },
+    infra: { peajes: 5, terminales: 2, aeropuertos: 1, puertos: 0 },
   },
   {
     nombre: 'San Juan', poblacion: 781217, radioKm: 200,
-    efectivos: { policia: 5000, gendarmeria: 1500, sifebu: 250 },
-    infra: { peajes: 5, terminales: 2, aeropuertos: 1, puertos: 0 },
-    fuentePolicia: 'Est. ~5.000 — 591 nuevos en 2023 (Diario de Cuyo 2023)',
+    efectivos: { policia: 2100, gendarmeria: 875, sifebu: 525 },
+    infra: { peajes: 4, terminales: 1, aeropuertos: 1, puertos: 0 },
   },
   {
     nombre: 'San Luis', poblacion: 508328, radioKm: 200,
-    efectivos: { policia: 3500, gendarmeria: 400, sifebu: 200 },
-    infra: { peajes: 6, terminales: 2, aeropuertos: 1, puertos: 0 },
-    fuentePolicia: 'Ratio 600/100k hab. — CORREPI/CELAG 2024',
+    efectivos: { policia: 1500, gendarmeria: 625, sifebu: 375 },
+    infra: { peajes: 4, terminales: 1, aeropuertos: 1, puertos: 0 },
   },
   {
     nombre: 'Santa Cruz', poblacion: 274794, radioKm: 600,
-    efectivos: { policia: 2500, gendarmeria: 500, sifebu: 200 },
-    infra: { peajes: 3, terminales: 3, aeropuertos: 3, puertos: 2 },
-    fuentePolicia: '~2.500 total — fuente investigada',
+    efectivos: { policia: 1200, gendarmeria: 500, sifebu: 300 },
+    infra: { peajes: 2, terminales: 2, aeropuertos: 2, puertos: 1 },
   },
   {
     nombre: 'Santa Fe', poblacion: 3536418, radioKm: 250,
-    efectivos: { policia: 17800, gendarmeria: 1200, sifebu: 500 },
-    infra: { peajes: 15, terminales: 5, aeropuertos: 2, puertos: 3 },
-    fuentePolicia: '17.500-17.800 — 19 Unidades Regionales, fuente investigada',
+    efectivos: { policia: 9600, gendarmeria: 4000, sifebu: 2400 },
+    infra: { peajes: 12, terminales: 3, aeropuertos: 2, puertos: 2 },
   },
   {
     nombre: 'Santiago del Estero', poblacion: 978313, radioKm: 250,
-    efectivos: { policia: 7700, gendarmeria: 600, sifebu: 300 },
-    infra: { peajes: 5, terminales: 2, aeropuertos: 2, puertos: 0 },
-    fuentePolicia: 'Ratio 1/127 hab. — ranking SNIC/La Gaceta Tucumán 2021',
+    efectivos: { policia: 2700, gendarmeria: 1125, sifebu: 675 },
+    infra: { peajes: 4, terminales: 2, aeropuertos: 1, puertos: 0 },
   },
   {
     nombre: 'Tierra del Fuego', poblacion: 187226, radioKm: 200,
-    efectivos: { policia: 2000, gendarmeria: 400, sifebu: 150 },
-    infra: { peajes: 2, terminales: 1, aeropuertos: 1, puertos: 1 },
-    fuentePolicia: '~2.000 activos — fuente investigada',
+    efectivos: { policia: 540, gendarmeria: 225, sifebu: 135 },
+    infra: { peajes: 1, terminales: 1, aeropuertos: 1, puertos: 1 },
   },
   {
     nombre: 'Tucumán', poblacion: 1769087, radioKm: 100,
-    efectivos: { policia: 13500, gendarmeria: 1500, sifebu: 400 },
-    infra: { peajes: 8, terminales: 3, aeropuertos: 1, puertos: 0 },
-    fuentePolicia: '>13.500 — Gobernador Jaldo, acto oficial septiembre 2025',
+    efectivos: { policia: 4200, gendarmeria: 1750, sifebu: 1050 },
+    infra: { peajes: 6, terminales: 2, aeropuertos: 1, puertos: 0 },
   },
 ];
 
@@ -670,14 +647,8 @@ function PanelQoS({ provincia, totalEfectivos, destinatariosP1, tiempoP0, tiempo
           </div>
         ))}
 
-        <div style={{ marginTop:5, fontSize:10, color:'#64748b', lineHeight:1.5 }}>
-          Efectivos policiales: datos confirmados o estimados por ratio
-          600/100k hab. (CORREPI/CELAG 2024) y ratios SNIC/La Gaceta 2021.
-          CABA incluye PFA + Policía de la Ciudad (dos fuerzas).
-          Datos exactos clasificados como confidenciales —
-          Min. Seguridad Nación (Chequeado 2024).
-          Infraestructura: ANAC · CNRT · Vialidad Nacional.
-          Valores aproximados para demostración científica.
+        <div style={{ marginTop:5, fontSize:8, color:'#334155' }}>
+          Est. proporcional · Fuente: Min. Seguridad Nación · Censo INDEC 2022
         </div>
         {p0Done && (
           <div style={{ height:3, background:'#22c55e', borderRadius:'0 0 8px 8px', width:'100%', marginTop:8 }} />

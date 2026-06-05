@@ -1,0 +1,19 @@
+# dependencies
+node_modules/
+
+# build outputs
+dist/
+build/
+
+# Vite cache
+.vite/
+
+# env files
+.env
+.env.*
+
+# OS files
+.DS_Store
+
+# tooling
+.claude/

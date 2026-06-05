@@ -1,0 +1,68 @@
+const ESCENARIOS = {
+  ciudad: {
+    id: "ciudad",
+    nombre: "Ciudad",
+    descripcion: "Área urbana densa con red celular completa",
+    velEscape: 50,
+    radioBase: 5,
+    kGeo: 1.0,
+    compatCB: 0.93,
+    fases: [
+      { tInicio: 0,   radio: 5,    factorGeo: 1.00, label: "Fase 1 — Activación local",       color: "#06b6d4" },
+      { tInicio: 180, radio: 500,  factorGeo: 0.10, label: "Fase 2 — Ampliación regional",    color: "#f59e0b" },
+      { tInicio: 360, radio: 2000, factorGeo: 0.05, label: "Fase 3 — Alerta provincial/nac.", color: "#ef4444" },
+    ],
+    canalAlt: null,
+    sinCobertura: false,
+  },
+  pueblo: {
+    id: "pueblo",
+    nombre: "Pueblo / Rural",
+    descripcion: "Localidad pequeña con cobertura parcial",
+    velEscape: 90,
+    radioBase: 20,
+    kGeo: 1.2,
+    compatCB: 0.72,
+    fases: [
+      { tInicio: 0,   radio: 20,   factorGeo: 1.00, label: "Fase 1 — Activación local",       color: "#06b6d4" },
+      { tInicio: 180, radio: 500,  factorGeo: 0.10, label: "Fase 2 — Ampliación regional",    color: "#f59e0b" },
+      { tInicio: 360, radio: 2000, factorGeo: 0.05, label: "Fase 3 — Alerta provincial/nac.", color: "#ef4444" },
+    ],
+    canalAlt: "Radios AM/FM locales + Gendarmería VHF",
+    sinCobertura: false,
+  },
+  rural: {
+    id: "rural",
+    nombre: "Zona Rural",
+    descripcion: "Campo abierto, densidad muy baja, ruta libre",
+    velEscape: 120,
+    radioBase: 30,
+    kGeo: 1.5,
+    compatCB: 0.55,
+    fases: [
+      { tInicio: 0,   radio: 30,   factorGeo: 1.00, label: "Fase 1 — Activación local",       color: "#06b6d4" },
+      { tInicio: 180, radio: 500,  factorGeo: 0.10, label: "Fase 2 — Ampliación regional",    color: "#f59e0b" },
+      { tInicio: 360, radio: 2000, factorGeo: 0.05, label: "Fase 3 — Alerta provincial/nac.", color: "#ef4444" },
+    ],
+    canalAlt: "Gendarmería VHF + radio satélite",
+    sinCobertura: false,
+  },
+  frontera: {
+    id: "frontera",
+    nombre: "Zona Fronteriza",
+    descripcion: "Paso internacional, coordinación transfronteriza",
+    velEscape: 110,
+    radioBase: 10,
+    kGeo: 1.3,
+    compatCB: 0.89,
+    fases: [
+      { tInicio: 0,   radio: 10,   factorGeo: 1.00, label: "Fase 1 — Activación local",       color: "#06b6d4" },
+      { tInicio: 180, radio: 500,  factorGeo: 0.10, label: "Fase 2 — Ampliación regional",    color: "#f59e0b" },
+      { tInicio: 360, radio: 2000, factorGeo: 0.05, label: "Fase 3 — Alerta provincial/nac.", color: "#ef4444" },
+    ],
+    canalAlt: "ICMEC / Interpol — coordinación transfronteriza",
+    sinCobertura: false,
+  },
+};
+
+module.exports = { ESCENARIOS };

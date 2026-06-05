@@ -1,0 +1,10 @@
+{
+  "name": "alerta-sofia-web",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev:backend":  "cd backend && node server.js",
+    "dev:frontend": "cd frontend && npx vite",
+    "install:all":  "cd backend && npm install && cd ../frontend && npm install"
+  }
+}
