@@ -254,8 +254,9 @@ const fmtPct = p => `${Math.min(100, Math.max(0, p)).toFixed(1)}%`;
 function fmtHMS(tHoras) {
   if (tHoras <= 0) return '00h 00m 00s';
   const h = Math.floor(tHoras);
-  const m = Math.floor((tHoras - h) * 60);
-  const s = Math.floor(((tHoras - h) * 60 - m) * 60);
+  const minutosTotales = (tHoras - h) * 60;
+  const m = Math.floor(minutosTotales);
+  const s = Math.floor((minutosTotales - m) * 60);
   return `${String(h).padStart(2, '0')}h ${String(m).padStart(2, '0')}m ${String(s).padStart(2, '0')}s`;
 }
 
