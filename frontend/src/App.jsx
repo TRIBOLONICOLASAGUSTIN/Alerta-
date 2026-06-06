@@ -885,6 +885,174 @@ function ConsolaTactica({ logs }) {
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
+   SIMULADOR APP MI ARGENTINA — VISTA DEL CIUDADANO
+══════════════════════════════════════════════════════════════════════════ */
+function SimuladorMiArgentina({
+  running, showPush, setShowPush,
+  provinciaNom, hora, fecha, contexto, genero,
+  ciudadanoScreen, setCiudadanoScreen,
+}) {
+  const ctxLabel   = CONTEXTOS.find(c => c.value === contexto)?.label ?? contexto;
+  const horaLabel  = hora  || '—';
+  const fechaLabel = fmtFechaDisplay(fecha);
+
+  const [clockStr, setClockStr] = useState(
+    () => new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })
+  );
+  useEffect(() => {
+    const t = setInterval(
+      () => setClockStr(new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })),
+      30_000
+    );
+    return () => clearInterval(t);
+  }, []);
+
+  return (
+    <div className="ciudadano-view">
+      <div className="phone-outer">
+        <div className="phone-mockup">
+
+          {/* ── Barra de estado ── */}
+          <div className="phone-status-bar">
+            <span>{clockStr}</span>
+            <span className="phone-status-icons">
+              <svg width="12" height="8" viewBox="0 0 12 8" fill="currentColor" style={{ opacity:0.7 }}>
+                <rect x="0" y="3" width="2" height="5" rx="0.5"/><rect x="3" y="2" width="2" height="6" rx="0.5"/>
+                <rect x="6" y="1" width="2" height="7" rx="0.5"/><rect x="9" y="0" width="2" height="8" rx="0.5"/>
+              </svg>
+              <svg width="15" height="8" viewBox="0 0 15 8" fill="currentColor" style={{ opacity:0.7 }}>
+                <rect x="0" y="2" width="13" height="6" rx="1" fillOpacity="0.3" stroke="currentColor" strokeWidth="0.8"/>
+                <rect x="1" y="3" width="9" height="4" rx="0.5"/>
+                <rect x="13.5" y="3.5" width="1" height="3" rx="0.5"/>
+              </svg>
+            </span>
+          </div>
+
+          {/* ── Push notification ── */}
+          {showPush && (
+            <div className="push-notification" onClick={() => { setCiudadanoScreen('alerta'); setShowPush(false); }}>
+              <div className="push-notification__app">
+                <span className="push-notification__icon">🇦🇷</span>
+                <span className="push-notification__name">Mi Argentina</span>
+                <span className="push-notification__time">ahora</span>
+              </div>
+              <div className="push-notification__title">⚠️ ALERTA SOFÍA</div>
+              <div className="push-notification__body">
+                Búsqueda urgente en <strong>{provinciaNom || 'provincia seleccionada'}</strong>. Tocá para ver detalles.
+              </div>
+            </div>
+          )}
+
+          {/* ── Pantalla principal ── */}
+          <div className="phone-screen">
+            {ciudadanoScreen === 'home' ? (
+
+              /* ─── Mi Argentina Home ─── */
+              <div className="mi-argentina-app">
+                <div className="mi-argentina-header">
+                  <svg width="26" height="26" viewBox="0 0 40 40" fill="none">
+                    <circle cx="20" cy="20" r="18" fill="white" stroke="#e0f4fc" strokeWidth="1"/>
+                    <path d="M20 4 L22 14 L20 13 L18 14 Z M20 36 L22 26 L20 27 L18 26 Z M4 20 L14 22 L13 20 L14 18 Z M36 20 L26 22 L27 20 L26 18 Z" fill="#75cef0"/>
+                    <circle cx="20" cy="20" r="7" fill="#00AEEF"/>
+                    <circle cx="20" cy="20" r="3" fill="#75cef0"/>
+                  </svg>
+                  <span className="mi-argentina-title">Mi Argentina</span>
+                </div>
+                <div className="mi-argentina-body">
+                  <div className="mi-argentina-greeting">Hola, Ciudadano 👋</div>
+                  <div className="mi-argentina-subtitle">¿Qué querés hacer hoy?</div>
+                  <div className="mi-argentina-grid">
+                    {[
+                      { icon: '🚗', label: 'Mis Vehículos' },
+                      { icon: '📅', label: 'Mis Turnos' },
+                      { icon: '💉', label: 'Cred. Vacunación' },
+                      { icon: '🪪', label: 'DNI Digital' },
+                      { icon: '🏥', label: 'Mi Salud' },
+                      { icon: '📄', label: 'Mis Trámites' },
+                    ].map(({ icon, label }) => (
+                      <div key={label} className="mi-argentina-tile">
+                        <span className="mi-argentina-tile__icon">{icon}</span>
+                        <span className="mi-argentina-tile__label">{label}</span>
+                      </div>
+                    ))}
+                  </div>
+                  {running && (
+                    <div className="mi-argentina-alerta-banner" onClick={() => setCiudadanoScreen('alerta')}>
+                      ⚠️ Alerta Sofía activa en {provinciaNom} — Toca para ver detalles
+                    </div>
+                  )}
+                </div>
+              </div>
+
+            ) : (
+
+              /* ─── Alerta Sofía Screen ─── */
+              <div className="alerta-sofia-screen">
+                <div className="alerta-sofia-header">
+                  <button className="alerta-sofia-back" onClick={() => setCiudadanoScreen('home')}>
+                    ← Volver
+                  </button>
+                  <span>⚠️ Alerta Sofía</span>
+                </div>
+                <div className="alerta-sofia-body">
+                  <div className="alerta-sofia-photo-placeholder">
+                    <svg width="56" height="72" viewBox="0 0 56 72" fill="#aaa">
+                      <circle cx="28" cy="18" r="14"/>
+                      <path d="M2 72 C2 48 54 48 54 72Z"/>
+                    </svg>
+                    <div className="alerta-sofia-photo-label">Foto del menor</div>
+                  </div>
+                  <div className="alerta-sofia-urgente">BÚSQUEDA URGENTE</div>
+                  <div className="alerta-sofia-provincia">{provinciaNom || '—'}</div>
+                  <div className="alerta-sofia-datos">
+                    <div className="alerta-sofia-dato">
+                      <span className="alerta-sofia-dato__label">Género</span>
+                      <span className="alerta-sofia-dato__value">{genero || '—'}</span>
+                    </div>
+                    <div className="alerta-sofia-dato">
+                      <span className="alerta-sofia-dato__label">Desaparición</span>
+                      <span className="alerta-sofia-dato__value">{horaLabel} · {fechaLabel}</span>
+                    </div>
+                    <div className="alerta-sofia-dato">
+                      <span className="alerta-sofia-dato__label">Contexto</span>
+                      <span className="alerta-sofia-dato__value">{ctxLabel}</span>
+                    </div>
+                    <div className="alerta-sofia-dato">
+                      <span className="alerta-sofia-dato__label">Protocolo</span>
+                      <span className="alerta-sofia-dato__value">Ley 26.061 · CONASNAF</span>
+                    </div>
+                  </div>
+                  <a href="tel:134" className="alerta-sofia-btn-llamar">
+                    📞 LLAMAR AL 134
+                  </a>
+                  <div className="alerta-sofia-nota">
+                    Si ves al menor, no lo acerques. Llamá al 134 de inmediato.
+                  </div>
+                </div>
+              </div>
+
+            )}
+          </div>
+
+          {/* ── Indicador home ── */}
+          <div className="phone-home-indicator"/>
+        </div>
+      </div>
+
+      {/* ── Info panel debajo del teléfono ── */}
+      <div className="ciudadano-info">
+        <div className="ciudadano-info__title">SIMULADOR APP MI ARGENTINA</div>
+        <div className="ciudadano-info__body">
+          {running
+            ? `Alerta activa en ${provinciaNom}. La notificación push aparece en tiempo real cuando el operador inicia la alerta.`
+            : 'Iniciá la alerta desde la vista C4I — Ministerio de Seguridad para simular la recepción de la push notification.'}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
    APP PRINCIPAL
 ══════════════════════════════════════════════════════════════════════════ */
 export default function App() {
@@ -903,6 +1071,11 @@ export default function App() {
   const [tReal,          setTReal]          = useState(0);
   const [smsDespachados, setSmsDespachados] = useState(0);
   const [logs,           setLogs]           = useState([]);
+
+  // ── Estado vista dual ──────────────────────────────────────────────────
+  const [activeView,      setActiveView]      = useState('operador');
+  const [ciudadanoScreen, setCiudadanoScreen] = useState('home');
+  const [showPush,        setShowPush]        = useState(false);
 
   const clockRef  = useRef(null);
   const simRef    = useRef(null);
@@ -942,6 +1115,16 @@ export default function App() {
     && !!nombre.trim() && !!provinciaNom && !!hora && !!fecha && !!genero;
 
   const qos = calcQoS(elapsed, provPoblacion, totalEfectivos, tiempoP0, destinatariosP1, tiempoP1);
+
+  // ── Push notification al ciudadano cuando arranca la simulación ────────
+  useEffect(() => {
+    if (running) {
+      setShowPush(true);
+    } else {
+      setShowPush(false);
+      setCiudadanoScreen('home');
+    }
+  }, [running]);
 
   // ── Reloj real con calcularTHoras — setInterval cada 1000ms ───────────
   useEffect(() => {
@@ -1075,17 +1258,54 @@ export default function App() {
   }, []);
 
   /* ════════════════════════════════════════════════════════════════════
-     RENDER — layout 40% / 60%
+     RENDER — Doble Vista: Operador (C4I) / Ciudadano (Mi Argentina)
   ════════════════════════════════════════════════════════════════════ */
   return (
-    <div style={{
-      background:    '#020617',
-      height:        '100vh',
-      display:       'flex',
-      flexDirection: 'column',
-      overflow:      'hidden',
-      color:         '#f1f5f9',
-    }}>
+    <div style={{ background: '#020617', minHeight: '100vh', color: '#f1f5f9' }}>
+
+      {/* ── Tab Switcher ─────────────────────────────────────────────── */}
+      <div className="view-switcher">
+        <button
+          className={`view-tab${activeView === 'operador' ? ' view-tab--active' : ''}`}
+          onClick={() => setActiveView('operador')}
+        >
+          🛡️ C4I — MINISTERIO DE SEGURIDAD
+        </button>
+        <button
+          className={`view-tab${activeView === 'ciudadano' ? ' view-tab--active' : ''}`}
+          onClick={() => setActiveView('ciudadano')}
+        >
+          📱 APP MI ARGENTINA
+          {running && activeView !== 'ciudadano' && (
+            <span className="view-tab__alert-dot"/>
+          )}
+        </button>
+      </div>
+
+      {/* ── Vista Ciudadano ──────────────────────────────────────────── */}
+      {activeView === 'ciudadano' && (
+        <SimuladorMiArgentina
+          running={running}
+          showPush={showPush}
+          setShowPush={setShowPush}
+          provinciaNom={provinciaNom}
+          hora={hora}
+          fecha={fecha}
+          contexto={contexto}
+          genero={genero}
+          ciudadanoScreen={ciudadanoScreen}
+          setCiudadanoScreen={setCiudadanoScreen}
+        />
+      )}
+
+      {/* ── Vista Operador ───────────────────────────────────────────── */}
+      {activeView === 'operador' && (
+      <div style={{
+        height:        'calc(100vh - 52px)',
+        display:       'flex',
+        flexDirection: 'column',
+        overflow:      'hidden',
+      }}>
 
       {/* ── Header ───────────────────────────────────────────────────── */}
       <div style={{
@@ -1318,6 +1538,8 @@ export default function App() {
           />
         </div>
       </div>
+      </div>
+      )}
     </div>
   );
 }
