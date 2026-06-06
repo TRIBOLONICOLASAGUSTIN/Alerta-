@@ -420,3 +420,43 @@ label {
   text-transform: uppercase;
 }
 .ciudadano-info__body { font-size: 11px; color: #475569; line-height: 1.55; }
+
+/* ══════════════════════════════════════════════════════════════════════
+   PHONE SCREEN — inputs light mode override (anula dark globals)
+══════════════════════════════════════════════════════════════════════ */
+.phone-screen input,
+.phone-screen select {
+  background: #ffffff !important;
+  color: #1a1a1a !important;
+  border: 1.5px solid #d1d5db !important;
+  border-radius: 8px !important;
+  padding: 10px 36px 10px 12px !important;
+  font-size: 13px !important;
+}
+.phone-screen input:focus {
+  border-color: #2e3192 !important;
+  box-shadow: 0 0 0 2px rgba(46,49,146,0.12) !important;
+  background: #fff !important;
+}
+.phone-screen input::placeholder { color: #ccc !important; }
+
+/* Clase helper para input con borde azul visible desde el start */
+.ma-input {
+  width: 100%;
+  background: #ffffff !important;
+  color: #1a1a1a !important;
+  border: 1.5px solid #d1d5db !important;
+  border-radius: 8px !important;
+  padding: 10px 36px 10px 12px !important;
+  font-size: 13px !important;
+  outline: none !important;
+  box-shadow: none !important;
+  font-family: inherit;
+}
+.ma-input--focused,
+.ma-input:focus {
+  border-color: #2e3192 !important;
+  box-shadow: 0 0 0 2px rgba(46,49,146,0.12) !important;
+}
+
+
