@@ -899,6 +899,66 @@ function ConsolaTactica({ logs }) {
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
+   PANEL INTELIGENCIA EN VIVO (OSINT) — AVISTAMIENTOS CIUDADANOS
+══════════════════════════════════════════════════════════════════════════ */
+function PanelOSINT({ reportes, onDespachar }) {
+  const hayNuevos = reportes.some(r => !r.leido);
+  return (
+    <Card accent={hayNuevos ? '#ef4444' : '#334155'}
+      style={{ animation: hayNuevos ? 'blink 1.4s infinite' : 'none' }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+        <SLabel color={hayNuevos ? '#ef4444' : undefined} mb={0}>
+          INTELIGENCIA EN VIVO (OSINT)
+        </SLabel>
+        {hayNuevos && <Badge text="NUEVO" color="#ef4444" blink/>}
+      </div>
+      {reportes.length === 0 ? (
+        <div style={{ fontSize: 9.5, color: '#334155', textAlign: 'center', padding: '10px 0' }}>
+          Sin avistamientos ciudadanos reportados
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 7, maxHeight: 180, overflowY: 'auto' }}>
+          {[...reportes].reverse().map(r => (
+            <div key={r.id} style={{
+              padding: '8px 10px', borderRadius: 6,
+              background: r.leido ? 'rgba(15,23,42,0.4)' : 'rgba(239,68,68,0.07)',
+              border: `1px solid ${r.leido ? '#1e293b' : 'rgba(239,68,68,0.4)'}`,
+              animation: !r.leido ? 'blink 1.4s infinite' : 'none',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
+                <span style={{ fontSize: 9, fontWeight: 800, color: '#ef4444', letterSpacing: '0.06em' }}>
+                  🚨 AVISTAMIENTO CIUDADANO
+                </span>
+                <span style={{ fontSize: 8, color: '#475569', fontFamily: 'monospace' }}>{r.tiempo}</span>
+              </div>
+              <div style={{ fontSize: 9.5, color: '#94a3b8', marginBottom: 3, lineHeight: 1.45 }}>{r.texto}</div>
+              <div style={{ fontSize: 8.5, color: '#64748b', marginBottom: r.leido ? 0 : 6 }}>📍 {r.ubicacion}</div>
+              {!r.leido && (
+                <button
+                  onClick={() => onDespachar(r.id)}
+                  style={{
+                    padding: '4px 10px',
+                    background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.5)',
+                    color: '#ef4444', borderRadius: 5, fontSize: 9, fontWeight: 700,
+                    cursor: 'pointer', fontFamily: 'inherit',
+                  }}
+                >
+                  Despachar Unidad ▶
+                </button>
+              )}
+              {r.leido && (
+                <div style={{ fontSize: 8, color: '#22c55e' }}>✓ Unidad despachada</div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </Card>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
    SIMULADOR APP MI ARGENTINA — VISTA DEL CIUDADANO
    Pixel-perfect mock basado en capturas reales de la app oficial
 ══════════════════════════════════════════════════════════════════════════ */
@@ -974,10 +1034,24 @@ const MA_SERVICES = [
 ];
 
 /* ── Pantalla LOGIN ─────────────────────────────────────────────────────── */
-function LoginScreen({ onLogin }) {
+const VALID_EMAIL = 'nicotribolo2005@gmail.com';
+const VALID_PASS  = '12flatron34';
+
+function LoginScreen({ onLogin, alertaPendiente }) {
   const [cuil,     setCuil]     = useState('');
   const [pass,     setPass]     = useState('');
   const [showPass, setShowPass] = useState(false);
+  const [error,    setError]    = useState('');
+
+  function handleSubmit() {
+    const ok = cuil.trim().toLowerCase() === VALID_EMAIL && pass === VALID_PASS;
+    if (!ok) {
+      setError('Email o contraseña incorrectos. Verificá tus datos e intentá de nuevo.');
+      return;
+    }
+    setError('');
+    onLogin();
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100%', background: '#fff' }}>
@@ -986,22 +1060,33 @@ function LoginScreen({ onLogin }) {
         <LogoMiArgentina size={20} />
       </div>
 
+      {/* Aviso alerta pendiente */}
+      {alertaPendiente && (
+        <div style={{ background: '#fff3cd', borderBottom: '1px solid #f59e0b', padding: '8px 18px', display: 'flex', gap: 8, alignItems: 'center' }}>
+          <span style={{ fontSize: 14 }}>⚠️</span>
+          <span style={{ fontSize: 11, color: '#78350f', fontWeight: 600, lineHeight: 1.4 }}>
+            Hay una Alerta Sofía activa. Iniciá sesión para ver los detalles.
+          </span>
+        </div>
+      )}
+
       {/* Form */}
       <div style={{ flex: 1, padding: '28px 22px 18px', display: 'flex', flexDirection: 'column' }}>
         <div style={{ fontSize: 19, fontWeight: 800, color: '#1a1a1a', marginBottom: 22, letterSpacing: '-0.02em' }}>
           Ingresá a tu cuenta
         </div>
 
-        {/* CUIL */}
+        {/* Email / CUIL */}
         <div style={{ marginBottom: 14 }}>
-          <div style={{ fontSize: 10, fontWeight: 700, color: '#555', marginBottom: 5, letterSpacing: '0.06em', textTransform: 'uppercase' }}>CUIL</div>
+          <div style={{ fontSize: 10, fontWeight: 700, color: '#555', marginBottom: 5, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Email / CUIL</div>
           <div style={{ position: 'relative' }}>
             <input
-              className="ma-input ma-input--focused"
+              className={`ma-input${error ? '' : ' ma-input--focused'}`}
               value={cuil}
-              onChange={e => setCuil(e.target.value)}
-              placeholder=""
-              autoComplete="off"
+              onChange={e => { setCuil(e.target.value); setError(''); }}
+              placeholder="tucuenta@ejemplo.com"
+              autoComplete="email"
+              style={error ? { borderColor: '#ef4444' } : {}}
             />
             <span style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: '#aaa', pointerEvents: 'none' }}>🗝</span>
           </div>
@@ -1015,7 +1100,9 @@ function LoginScreen({ onLogin }) {
               className="ma-input"
               type={showPass ? 'text' : 'password'}
               value={pass}
-              onChange={e => setPass(e.target.value)}
+              onChange={e => { setPass(e.target.value); setError(''); }}
+              onKeyDown={e => e.key === 'Enter' && handleSubmit()}
+              style={error ? { borderColor: '#ef4444' } : {}}
             />
             <button
               onClick={() => setShowPass(p => !p)}
@@ -1026,17 +1113,24 @@ function LoginScreen({ onLogin }) {
           </div>
         </div>
 
-        <div style={{ fontSize: 11, color: MA_BLUE, fontWeight: 600, marginBottom: 22, cursor: 'pointer', textAlign: 'right' }}>
+        {/* Error */}
+        {error && (
+          <div style={{ marginBottom: 10, padding: '8px 10px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.35)', borderRadius: 8, fontSize: 11, color: '#ef4444', lineHeight: 1.4 }}>
+            ✗ {error}
+          </div>
+        )}
+
+        <div style={{ fontSize: 11, color: MA_BLUE, fontWeight: 600, marginBottom: 18, cursor: 'pointer', textAlign: 'right' }}>
           ¿Olvidaste tu contraseña?
         </div>
 
         {/* Botón Ingresar */}
         <button
-          onClick={onLogin}
+          onClick={handleSubmit}
           style={{
             background: MA_BLUE, color: '#fff', border: 'none', borderRadius: 50,
             padding: '13px 0', fontSize: 15, fontWeight: 800, cursor: 'pointer',
-            width: '100%', letterSpacing: '0.01em', marginBottom: 28,
+            width: '100%', letterSpacing: '0.01em', marginBottom: 28, fontFamily: 'inherit',
           }}
         >
           Ingresar
@@ -1164,14 +1258,135 @@ function DashboardScreen({ isSimulating, nombreMenor, provinciaNom, onAlerta }) 
 }
 
 /* ── Pantalla ALERTA SOFÍA ──────────────────────────────────────────────── */
-function AlertaScreen({ nombreMenor, provinciaNom, hora, fecha, contexto, genero, onBack }) {
+function AlertaScreen({ nombreMenor, provinciaNom, hora, fecha, contexto, genero, onBack, onReporte, tiempoDisplay }) {
   const ctxLabel   = CONTEXTOS.find(c => c.value === contexto)?.label ?? contexto;
   const horaLabel  = hora  || '—';
   const fechaLabel = fmtFechaDisplay(fecha);
 
+  const [pantalla,    setPantalla]    = useState('alerta');
+  const [descripcion, setDescripcion] = useState('');
+  const [ubicacion,   setUbicacion]   = useState('');
+
+  function enviarReporte() {
+    if (!descripcion.trim()) return;
+    onReporte && onReporte({
+      id:       Date.now(),
+      texto:    descripcion.trim(),
+      ubicacion: ubicacion.trim() || `${provinciaNom || 'Argentina'} — Coordenadas aproximadas`,
+      tiempo:   tiempoDisplay || '—',
+      leido:    false,
+    });
+    setPantalla('exito');
+  }
+
+  /* Encabezado rojo reutilizable */
+  function HeaderRojo({ label, onVolver }) {
+    return (
+      <div style={{ background: '#b91c1c', color: '#fff', padding: '11px 14px', display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+        <button onClick={onVolver} style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer', padding: '4px 9px', borderRadius: 6, fontFamily: 'inherit' }}>
+          ← Volver
+        </button>
+        <span style={{ fontWeight: 800, fontSize: 14, flex: 1 }}>{label}</span>
+      </div>
+    );
+  }
+
+  /* ── Pantalla ÉXITO ── */
+  if (pantalla === 'exito') {
+    return (
+      <div className="alerta-sofia-screen">
+        <HeaderRojo label="Reporte enviado" onVolver={() => setPantalla('alerta')} />
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px 20px', gap: 16, textAlign: 'center', background: '#fff' }}>
+          <div style={{ fontSize: 52 }}>✅</div>
+          <div style={{ fontSize: 17, fontWeight: 900, color: '#1a1a1a', lineHeight: 1.3 }}>¡Gracias por tu ayuda!</div>
+          <div style={{ fontSize: 12, color: '#444', lineHeight: 1.6 }}>
+            Las fuerzas de seguridad están analizando tu reporte. Tu colaboración puede salvar una vida.
+          </div>
+          <button
+            onClick={() => setPantalla('alerta')}
+            style={{ background: MA_BLUE, color: '#fff', border: 'none', borderRadius: 12, padding: '12px 24px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', marginTop: 8 }}
+          >
+            Volver a la alerta
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  /* ── Pantalla FORMULARIO ── */
+  if (pantalla === 'reporte') {
+    return (
+      <div className="alerta-sofia-screen">
+        <HeaderRojo label="Reportar avistamiento" onVolver={() => setPantalla('alerta')} />
+        <div style={{ flex: 1, overflowY: 'auto', padding: '16px 14px', display: 'flex', flexDirection: 'column', gap: 12, background: '#f9fafb' }}>
+          <div style={{ fontSize: 12, color: '#333', lineHeight: 1.55 }}>
+            Por favor, indicá dónde y cuándo viste a <strong>{nombreMenor || 'la persona buscada'}</strong>.
+          </div>
+          <div>
+            <div style={{ fontSize: 10, fontWeight: 700, color: '#555', marginBottom: 5, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+              Descripción del avistamiento *
+            </div>
+            <textarea
+              value={descripcion}
+              onChange={e => setDescripcion(e.target.value)}
+              placeholder="Ej: Vi a una niña con las características descriptas cerca de la plaza principal, a las 15:30 hs..."
+              rows={4}
+              style={{
+                width: '100%', boxSizing: 'border-box',
+                background: '#fff', color: '#1a1a1a',
+                border: '1.5px solid #d1d5db', borderRadius: 8,
+                padding: '8px 10px', fontSize: 12, fontFamily: 'inherit',
+                resize: 'none', lineHeight: 1.5, outline: 'none',
+              }}
+            />
+          </div>
+          <div>
+            <div style={{ fontSize: 10, fontWeight: 700, color: '#555', marginBottom: 5, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+              Ubicación
+            </div>
+            <input
+              className="ma-input"
+              value={ubicacion}
+              onChange={e => setUbicacion(e.target.value)}
+              placeholder="Ingresá la ubicación..."
+            />
+            <button
+              onClick={() => setUbicacion(`${provinciaNom || 'Argentina'} — Coordenadas aproximadas`)}
+              style={{
+                marginTop: 6, padding: '7px 12px',
+                background: '#f0f4ff', border: '1px solid #c7d2fe',
+                borderRadius: 8, fontSize: 11, fontWeight: 600, color: MA_BLUE,
+                cursor: 'pointer', fontFamily: 'inherit', width: '100%',
+              }}
+            >
+              📍 Usar Ubicación Actual (GPS)
+            </button>
+          </div>
+          <button
+            onClick={enviarReporte}
+            disabled={!descripcion.trim()}
+            style={{
+              background: descripcion.trim() ? '#b91c1c' : '#e5e7eb',
+              color: descripcion.trim() ? '#fff' : '#9ca3af',
+              border: 'none', borderRadius: 14,
+              padding: '13px', fontSize: 14, fontWeight: 800,
+              cursor: descripcion.trim() ? 'pointer' : 'not-allowed',
+              fontFamily: 'inherit',
+            }}
+          >
+            🚨 ENVIAR REPORTE AL 134
+          </button>
+          <div style={{ fontSize: 10, color: '#888', textAlign: 'center', lineHeight: 1.5 }}>
+            Tu reporte es anónimo. Los datos se transmiten encriptados a las fuerzas de seguridad.
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  /* ── Pantalla ALERTA (principal) ── */
   return (
     <div className="alerta-sofia-screen">
-      {/* Header rojo oscuro */}
       <div style={{ background: '#b91c1c', color: '#fff', padding: '11px 14px', display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
         <button
           onClick={onBack}
@@ -1183,9 +1398,7 @@ function AlertaScreen({ nombreMenor, provinciaNom, hora, fecha, contexto, genero
         <span style={{ fontSize: 9, background: 'rgba(255,255,255,0.2)', borderRadius: 4, padding: '2px 7px', fontWeight: 700, letterSpacing: '0.08em' }}>URGENTE</span>
       </div>
 
-      {/* Cuerpo */}
       <div className="alerta-sofia-body">
-        {/* Foto placeholder */}
         <div className="alerta-sofia-photo-placeholder">
           <svg width="56" height="68" viewBox="0 0 56 68" fill="#bbb">
             <circle cx="28" cy="18" r="14"/>
@@ -1194,18 +1407,11 @@ function AlertaScreen({ nombreMenor, provinciaNom, hora, fecha, contexto, genero
           <div className="alerta-sofia-photo-label">Foto del menor</div>
         </div>
 
-        {/* Jerarquía visual: BÚSQUEDA URGENTE → Nombre → Provincia */}
         <div style={{ textAlign: 'center', width: '100%' }}>
-          <div style={{
-            fontSize: 12, fontWeight: 900, color: '#b91c1c',
-            letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 4,
-          }}>
+          <div style={{ fontSize: 12, fontWeight: 900, color: '#b91c1c', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 4 }}>
             BÚSQUEDA URGENTE
           </div>
-          <div style={{
-            fontSize: 18, fontWeight: 900, color: '#1a1a1a',
-            letterSpacing: '-0.01em', lineHeight: 1.15, marginBottom: 6,
-          }}>
+          <div style={{ fontSize: 18, fontWeight: 900, color: '#1a1a1a', letterSpacing: '-0.01em', lineHeight: 1.15, marginBottom: 6 }}>
             {nombreMenor || 'Nombre no especificado'}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, color: '#555', fontSize: 11.5, fontWeight: 500 }}>
@@ -1217,13 +1423,12 @@ function AlertaScreen({ nombreMenor, provinciaNom, hora, fecha, contexto, genero
           </div>
         </div>
 
-        {/* Datos */}
         <div className="alerta-sofia-datos">
           {[
-            { label: 'Género',        value: genero    || '—'                   },
-            { label: 'Desaparición',  value: `${horaLabel} · ${fechaLabel}`     },
-            { label: 'Contexto',      value: ctxLabel  || '—'                   },
-            { label: 'Protocolo',     value: 'Ley 26.061 · CONASNAF'            },
+            { label: 'Género',       value: genero   || '—'               },
+            { label: 'Desaparición', value: `${horaLabel} · ${fechaLabel}` },
+            { label: 'Contexto',     value: ctxLabel || '—'               },
+            { label: 'Protocolo',    value: 'Ley 26.061 · CONASNAF'       },
           ].map(({ label, value }) => (
             <div key={label} className="alerta-sofia-dato">
               <span className="alerta-sofia-dato__label">{label}</span>
@@ -1232,13 +1437,12 @@ function AlertaScreen({ nombreMenor, provinciaNom, hora, fecha, contexto, genero
           ))}
         </div>
 
-        {/* Botón principal — LLAMAR AL 134 */}
         <a href="tel:134" className="alerta-sofia-btn-llamar">
           📞 LLAMAR AL 134 — LÍNEA DIRECTA
         </a>
 
-        {/* Botón secundario — Reportar */}
         <button
+          onClick={() => setPantalla('reporte')}
           style={{
             width: '100%', background: '#fff', border: '1.5px solid #b91c1c',
             borderRadius: 14, padding: '12px', fontSize: 13, fontWeight: 700,
@@ -1261,8 +1465,10 @@ function SimuladorMiArgentina({
   isSimulating, showPush, setShowPush,
   nombreMenor, provinciaNom, hora, fecha, contexto, genero,
   ciudadanoScreen, setCiudadanoScreen,
+  onReporte, tiempoDisplay,
 }) {
-  const [loggedIn, setLoggedIn] = useState(false);
+  const [loggedIn,      setLoggedIn]      = useState(false);
+  const [pendingAlerta, setPendingAlerta] = useState(false);
   const nombreMenorSeguro = nombreMenor?.trim() || 'menor no especificado';
 
   const [clockStr, setClockStr] = useState(
@@ -1275,6 +1481,25 @@ function SimuladorMiArgentina({
     );
     return () => clearInterval(t);
   }, []);
+
+  function handleLoginSuccess() {
+    setLoggedIn(true);
+    if (pendingAlerta) {
+      setCiudadanoScreen('alerta');
+      setPendingAlerta(false);
+      setShowPush(false);
+    }
+  }
+
+  function handlePushTap() {
+    if (loggedIn) {
+      setCiudadanoScreen('alerta');
+      setShowPush(false);
+    } else {
+      setPendingAlerta(true);
+      setShowPush(false);
+    }
+  }
 
   /* Cuando el operador resetea, volvemos al home del teléfono (no al login) */
   const screen = !loggedIn ? 'login' : ciudadanoScreen === 'alerta' ? 'alerta' : 'home';
@@ -1290,7 +1515,7 @@ function SimuladorMiArgentina({
           {showPush && (
             <div
               className="push-notification"
-              onClick={() => { setLoggedIn(true); setCiudadanoScreen('alerta'); setShowPush(false); }}
+              onClick={handlePushTap}
             >
               <div className="push-notification__app">
                 <span className="push-notification__icon">🇦🇷</span>
@@ -1308,7 +1533,7 @@ function SimuladorMiArgentina({
           {/* ── Contenido de pantalla ── */}
           <div className="phone-screen">
             {screen === 'login' && (
-              <LoginScreen onLogin={() => setLoggedIn(true)} />
+              <LoginScreen onLogin={handleLoginSuccess} alertaPendiente={pendingAlerta || (isSimulating && !loggedIn)} />
             )}
             {screen === 'home' && (
               <DashboardScreen
@@ -1327,6 +1552,8 @@ function SimuladorMiArgentina({
                 contexto={contexto}
                 genero={genero}
                 onBack={() => setCiudadanoScreen('home')}
+                onReporte={onReporte}
+                tiempoDisplay={tiempoDisplay}
               />
             )}
           </div>
@@ -1371,6 +1598,7 @@ export default function App() {
   const [activeView,      setActiveView]      = useState('operador');
   const [ciudadanoScreen, setCiudadanoScreen] = useState('home');
   const [showPush,        setShowPush]        = useState(false);
+  const [reportesCiudadanos, setReportesCiudadanos] = useState([]);
 
   const loggedRef     = useRef({});
   const simContextRef = useRef(null);
@@ -1577,6 +1805,7 @@ export default function App() {
     setSegundosSimulados(0);
     setTiempoTranscurridoInicialSeg(0);
     setLogs([]);
+    setReportesCiudadanos([]);
     loggedRef.current     = {};
     simContextRef.current = null;
   }
@@ -1620,6 +1849,8 @@ export default function App() {
           genero={genero}
           ciudadanoScreen={ciudadanoScreen}
           setCiudadanoScreen={setCiudadanoScreen}
+          onReporte={obj => setReportesCiudadanos(prev => [...prev, obj])}
+          tiempoDisplay={relojFormateado}
         />
       )}
 
@@ -1830,6 +2061,13 @@ export default function App() {
           />
 
           <ConsolaTactica logs={logs}/>
+
+          <PanelOSINT
+            reportes={reportesCiudadanos}
+            onDespachar={id => setReportesCiudadanos(prev =>
+              prev.map(r => r.id === id ? { ...r, leido: true } : r)
+            )}
+          />
         </div>
 
         {/* ════ PANEL DERECHO 60% ════ */}
