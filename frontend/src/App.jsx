@@ -25,8 +25,10 @@ const K_META     = 4;
 const K_IG       = 4;
 const K_TV       = 3;
 const TV_LAT_MIN = 5;
-const MULTIPLICADOR = 60; // 1 seg real = 60 seg simulados
+const MULTIPLICADOR = 1;  // 1 seg real = 1 seg del reloj
 const SIM_ACCEL     = MULTIPLICADOR;
+const TICK_MS       = 100;
+const SEGUNDOS_SIMULADOS_POR_TICK = (TICK_MS / 1000) * MULTIPLICADOR;
 
 // ── Modelo expansión territorial ─────────────────────────────────────────
 const LAMBDA = 0.835;     // λ = 0.835 h⁻¹ → T₂ ≈ 50 min
@@ -39,7 +41,7 @@ const calcularTHoras = (fecha, hora) => {
   const iso = fecha + 'T' + hora + ':00';
   const desaparicion = new Date(iso);
   if (isNaN(desaparicion.getTime())) return 0;
-  const diffMs = Date.now() - desaparicion.getTime();
+  const diffMs = new Date().getTime() - desaparicion.getTime();
   return diffMs > 0 ? diffMs / 3600000 : 0;
 };
 
@@ -1070,7 +1072,7 @@ function LoginScreen({ onLogin }) {
 }
 
 /* ── Pantalla DASHBOARD ─────────────────────────────────────────────────── */
-function DashboardScreen({ isSimulating, provinciaNom, onAlerta }) {
+function DashboardScreen({ isSimulating, nombreMenor, provinciaNom, onAlerta }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100%', background: '#f4f5f7' }}>
       {/* Header azul */}
@@ -1150,7 +1152,9 @@ function DashboardScreen({ isSimulating, provinciaNom, onAlerta }) {
             <span style={{ fontSize: 18, flexShrink: 0 }}>⚠️</span>
             <div>
               <div style={{ fontWeight: 800, marginBottom: 2 }}>Alerta Sofía activa en {provinciaNom || 'tu provincia'}</div>
-              <div style={{ fontWeight: 500, fontSize: 10.5 }}>Tocá para ver detalles de la búsqueda urgente</div>
+              <div style={{ fontWeight: 500, fontSize: 10.5 }}>
+                Búsqueda urgente de {nombreMenor}. Tocá para ver detalles.
+              </div>
             </div>
           </div>
         )}
@@ -1259,6 +1263,7 @@ function SimuladorMiArgentina({
   ciudadanoScreen, setCiudadanoScreen,
 }) {
   const [loggedIn, setLoggedIn] = useState(false);
+  const nombreMenorSeguro = nombreMenor?.trim() || 'menor no especificado';
 
   const [clockStr, setClockStr] = useState(
     () => new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })
@@ -1294,7 +1299,7 @@ function SimuladorMiArgentina({
               </div>
               <div className="push-notification__title">⚠️ Ministerio de Seguridad — ALERTA SOFÍA</div>
               <div className="push-notification__body">
-                Búsqueda urgente de menor en <strong>{provinciaNom || 'tu zona'}</strong>.
+                Búsqueda urgente de <strong>{nombreMenorSeguro}</strong> en <strong>{provinciaNom || 'tu zona'}</strong>.
                 Tocá para ver información vital.
               </div>
             </div>
@@ -1308,13 +1313,14 @@ function SimuladorMiArgentina({
             {screen === 'home' && (
               <DashboardScreen
                 isSimulating={isSimulating}
+                nombreMenor={nombreMenorSeguro}
                 provinciaNom={provinciaNom}
                 onAlerta={() => setCiudadanoScreen('alerta')}
               />
             )}
             {screen === 'alerta' && (
               <AlertaScreen
-                nombreMenor={nombreMenor}
+                nombreMenor={nombreMenorSeguro}
                 provinciaNom={provinciaNom}
                 hora={hora}
                 fecha={fecha}
@@ -1357,8 +1363,7 @@ export default function App() {
 
   // ── Estado simulación ─────────────────────────────────────────────────
   const [isSimulating, setIsSimulating] = useState(false);
-  const [tInicioReal,  setTInicioReal]  = useState(null);
-  const [segSimulados, setSegSimulados] = useState(0);
+  const [segundosSimulados, setSegundosSimulados] = useState(0);
   const [tiempoTranscurridoInicialSeg, setTiempoTranscurridoInicialSeg] = useState(0);
   const [logs,         setLogs]         = useState([]);
 
@@ -1367,8 +1372,8 @@ export default function App() {
   const [ciudadanoScreen, setCiudadanoScreen] = useState('home');
   const [showPush,        setShowPush]        = useState(false);
 
-  const intervalRef  = useRef(null);
-  const loggedRef    = useRef({});
+  const loggedRef     = useRef({});
+  const simContextRef = useRef(null);
 
   // ── Derivados básicos ──────────────────────────────────────────────────
   const edadNum      = parseInt(edad, 10);
@@ -1396,7 +1401,7 @@ export default function App() {
 
   // ── FUENTE ÚNICA: toda la derivación de tiempo ─────────────────────────
   const segBase = Math.floor(
-    (tiempoTranscurridoInicialSeg ?? 0) + segSimulados
+    (tiempoTranscurridoInicialSeg ?? 0) + segundosSimulados
   );
   const horas    = Math.floor(segBase / 3600);
   const minutos  = Math.floor((segBase % 3600) / 60);
@@ -1407,7 +1412,7 @@ export default function App() {
     String(minutos).padStart(2, '0') + 'm ' +
     String(segundos).padStart(2, '0') + 's';
 
-  const elapsedReal     = segSimulados / MULTIPLICADOR;
+  const elapsedReal     = segundosSimulados / MULTIPLICADOR;
   const segundosTotales = segBase;
   const t_horas_decimal = segBase / 3600;
   const radioKmRaw      = calcRadioExp(t_horas_decimal, r0);
@@ -1422,15 +1427,14 @@ export default function App() {
   useEffect(() => {
     let interval;
     if (isSimulating) {
-      if (tInicioReal === null) setTInicioReal(Date.now());
       interval = setInterval(() => {
-        const ahora = Date.now();
-        const transcurridoReal = (ahora - (tInicioReal ?? ahora)) / 1000;
-        setSegSimulados(transcurridoReal * MULTIPLICADOR);
-      }, 100);
+        setSegundosSimulados(prev =>
+          Number((prev + SEGUNDOS_SIMULADOS_POR_TICK).toFixed(1))
+        );
+      }, TICK_MS);
     }
     return () => clearInterval(interval);
-  }, [isSimulating, tInicioReal]);
+  }, [isSimulating]);
 
   // ── Push notification al ciudadano ────────────────────────────────────
   useEffect(() => {
@@ -1441,6 +1445,72 @@ export default function App() {
       setCiudadanoScreen('home');
     }
   }, [isSimulating]);
+
+  // ── Hitos tácticos sincronizados con el acumulador de simulación ──────
+  useEffect(() => {
+    if (!isSimulating || !simContextRef.current) return;
+
+    const {
+      t0,
+      pop,
+      rprov,
+      curR0,
+      capTotalEf,
+      capDestP1,
+      capTiempoP0,
+      capTiempoP1,
+      capTP01,
+      invMin,
+      peajes,
+      terminales,
+      aeropuertos,
+      puertos,
+    } = simContextRef.current;
+
+    const erFloor = Math.floor(elapsedReal);
+
+    if (erFloor >= TV_LAT_MIN && !loggedRef.current.tv) {
+      loggedRef.current.tv = true;
+      setLogs(l => [...l,
+        `[DIFUSIÓN] TV/Radio: latencia humana ~5min cumplida. k=${K_TV} h⁻¹, CAU=${CAU_TV * 100}%, L=${fmtK(CAU_TV * pop)}.`,
+      ]);
+    }
+
+    if (erFloor >= capTiempoP0 && !loggedRef.current.p1start) {
+      loggedRef.current.p1start = true;
+      const curT = (t0 + erFloor * MULTIPLICADOR) / 3600;
+      const curR = Math.min(calcRadioExp(curT, curR0), rprov);
+      setLogs(l => [...l,
+        `[P0] COMPLETADO: ${fmt(capTotalEf)} efectivos en ${capTiempoP0}s ✓`,
+        `[VLR-MOCK] Simulación: ${fmt(capDestP1)} dispositivos · ${peajes} peajes, ${terminales} terminales${aeropuertos > 0 ? ', ' + aeropuertos + ' aeropuertos' : ''}${puertos > 0 ? ', ' + puertos + ' puertos' : ''} · R=${curR.toFixed(1)}km`,
+        `[VLR-MOCK] AVISO: acceso VLR real requiere habilitación ENACOM/operadoras (Res. 208/2019).`,
+        `[P1] priority_flag=1: Geovallado Táctico iniciado`,
+      ]);
+    }
+
+    if (erFloor >= capTP01 && !loggedRef.current.p2start) {
+      loggedRef.current.p2start = true;
+      setLogs(l => [...l,
+        `[P1] COMPLETADO: ${fmt(capDestP1)} civiles en ${capTiempoP1}s ✓`,
+        `[P2] priority_flag=2: Difusión provincial background iniciada`,
+        `[P2] Iniciando difusión provincial: ${fmtK(pop)} SMS · ETA: ~${invMin} min`,
+        `[DIFUSIÓN] Curvas logísticas Meta/IG alcanzando asíntota N(t)→L. Modelo estable.`,
+      ]);
+    }
+
+    if (erFloor > capTP01) {
+      const p2Key = `p2_${Math.floor((erFloor - capTP01) / 15)}`;
+      if ((erFloor - capTP01) % 15 === 0 && !loggedRef.current[p2Key]) {
+        loggedRef.current[p2Key] = true;
+        const p2sent = Math.min((erFloor - capTP01) * SMSC_TPS, pop);
+        const p2rem  = Math.max(0, pop - p2sent);
+        const eta    = p2rem > 0 ? Math.ceil(p2rem / SMSC_TPS / 60) : 0;
+        setLogs(l => [...l,
+          `[P2] ${fmt(p2sent)} / ${fmtK(pop)} · Restantes: ${fmtK(p2rem)} · ETA: ${eta}min`,
+        ]);
+      }
+    }
+  }, [isSimulating, elapsedReal]);
 
   // ── Iniciar alerta ─────────────────────────────────────────────────────
   function iniciar() {
@@ -1467,11 +1537,25 @@ export default function App() {
     // Offset inicial: convierte tiempo real de desaparición en segundos simulados
     const tRealHoras = calcularTHoras(fecha, hora);
     const t0 = Math.round(tRealHoras * 3600);
-    const nowMs = Date.now();
-    setTInicioReal(nowMs);
-    setSegSimulados(0);
+    setSegundosSimulados(0);
     setTiempoTranscurridoInicialSeg(t0);
     loggedRef.current = {};
+    simContextRef.current = {
+      t0,
+      pop,
+      rprov,
+      curR0,
+      capTotalEf,
+      capDestP1,
+      capTiempoP0,
+      capTiempoP1,
+      capTP01,
+      invMin,
+      peajes,
+      terminales,
+      aeropuertos,
+      puertos,
+    };
 
     const rInit = Math.min(calcRadioExp(tRealHoras, curR0), rprov);
     setIsSimulating(true);
@@ -1486,71 +1570,16 @@ export default function App() {
       `[DIFUSIÓN] Meta/ICMEC: k=${K_META} h⁻¹, CAU=${CAU_META * 100}%, L=${fmtK(CAU_META * pop)}, modelo logístico activo.`,
       `[DIFUSIÓN] Instagram: k=${K_IG} h⁻¹, CAU=${CAU_IG * 100}%, L=${fmtK(CAU_IG * pop)}, integración Meta activa (AR 2019).`,
     ]);
-
-    // Tick de logs/QoS a 100ms; el reloj visual se calcula desde segBase.
-    clearInterval(intervalRef.current);
-    intervalRef.current = setInterval(() => {
-      const now = Date.now();
-
-      const er      = (now - nowMs) / 1000; // segundos reales (float)
-      const erFloor = Math.floor(er);                       // segundos reales (entero)
-
-      if (erFloor >= TV_LAT_MIN && !loggedRef.current.tv) {
-        loggedRef.current.tv = true;
-        setLogs(l => [...l,
-          `[DIFUSIÓN] TV/Radio: latencia humana ~5min cumplida. k=${K_TV} h⁻¹, CAU=${CAU_TV * 100}%, L=${fmtK(CAU_TV * pop)}.`,
-        ]);
-      }
-
-      if (erFloor >= capTiempoP0 && !loggedRef.current.p1start) {
-        loggedRef.current.p1start = true;
-        const curT = (t0 + erFloor * MULTIPLICADOR) / 3600;
-        const curR = Math.min(calcRadioExp(curT, curR0), rprov);
-        setLogs(l => [...l,
-          `[P0] COMPLETADO: ${fmt(capTotalEf)} efectivos en ${capTiempoP0}s ✓`,
-          `[VLR-MOCK] Simulación: ${fmt(capDestP1)} dispositivos · ${peajes} peajes, ${terminales} terminales${aeropuertos > 0 ? ', ' + aeropuertos + ' aeropuertos' : ''}${puertos > 0 ? ', ' + puertos + ' puertos' : ''} · R=${curR.toFixed(1)}km`,
-          `[VLR-MOCK] AVISO: acceso VLR real requiere habilitación ENACOM/operadoras (Res. 208/2019).`,
-          `[P1] priority_flag=1: Geovallado Táctico iniciado`,
-        ]);
-      }
-
-      if (erFloor >= capTP01 && !loggedRef.current.p2start) {
-        loggedRef.current.p2start = true;
-        setLogs(l => [...l,
-          `[P1] COMPLETADO: ${fmt(capDestP1)} civiles en ${capTiempoP1}s ✓`,
-          `[P2] priority_flag=2: Difusión provincial background iniciada`,
-          `[P2] Iniciando difusión provincial: ${fmtK(pop)} SMS · ETA: ~${invMin} min`,
-          `[DIFUSIÓN] Curvas logísticas Meta/IG alcanzando asíntota N(t)→L. Modelo estable.`,
-        ]);
-      }
-
-      // Progreso P2 cada 15 segundos reales (guard por clave para evitar doble disparo en 100ms)
-      if (erFloor > capTP01) {
-        const p2Key = `p2_${Math.floor((erFloor - capTP01) / 15)}`;
-        if ((erFloor - capTP01) % 15 === 0 && !loggedRef.current[p2Key]) {
-          loggedRef.current[p2Key] = true;
-          const p2sent = Math.min((erFloor - capTP01) * SMSC_TPS, pop);
-          const p2rem  = Math.max(0, pop - p2sent);
-          const eta    = p2rem > 0 ? Math.ceil(p2rem / SMSC_TPS / 60) : 0;
-          setLogs(l => [...l,
-            `[P2] ${fmt(p2sent)} / ${fmtK(pop)} · Restantes: ${fmtK(p2rem)} · ETA: ${eta}min`,
-          ]);
-        }
-      }
-    }, 100);
   }
 
   function resetear() {
-    clearInterval(intervalRef.current);
     setIsSimulating(false);
-    setTInicioReal(null);
-    setSegSimulados(0);
+    setSegundosSimulados(0);
     setTiempoTranscurridoInicialSeg(0);
     setLogs([]);
-    loggedRef.current    = {};
+    loggedRef.current     = {};
+    simContextRef.current = null;
   }
-
-  useEffect(() => () => clearInterval(intervalRef.current), []);
 
   /* ════════════════════════════════════════════════════════════════════
      RENDER — Doble Vista: Operador (C4I) / Ciudadano (Mi Argentina)
