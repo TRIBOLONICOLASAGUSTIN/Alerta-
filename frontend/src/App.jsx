@@ -1258,10 +1258,13 @@ function DashboardScreen({ isSimulating, nombreMenor, provinciaNom, onAlerta }) 
 }
 
 /* ── Pantalla ALERTA SOFÍA ──────────────────────────────────────────────── */
-function AlertaScreen({ nombreMenor, provinciaNom, hora, fecha, contexto, genero, onBack, onReporte, tiempoDisplay }) {
+function AlertaScreen({ nombreMenor, provinciaNom, hora, fecha, contexto, genero, onBack, onReporte, tiempoDisplay, datosVictima }) {
   const ctxLabel   = CONTEXTOS.find(c => c.value === contexto)?.label ?? contexto;
   const horaLabel  = hora  || '—';
   const fechaLabel = fmtFechaDisplay(fecha);
+  const edad       = datosVictima?.edad || '—';
+  const vestimenta = datosVictima?.vestimenta || '—';
+  const ultimaVezVista = datosVictima?.ultimaVezVista || '—';
 
   const [pantalla,    setPantalla]    = useState('alerta');
   const [descripcion, setDescripcion] = useState('');
@@ -1400,11 +1403,25 @@ function AlertaScreen({ nombreMenor, provinciaNom, hora, fecha, contexto, genero
 
       <div className="alerta-sofia-body">
         <div className="alerta-sofia-photo-placeholder">
-          <svg width="56" height="68" viewBox="0 0 56 68" fill="#bbb">
-            <circle cx="28" cy="18" r="14"/>
-            <path d="M2 68 C2 46 54 46 54 68Z"/>
-          </svg>
-          <div className="alerta-sofia-photo-label">Foto del menor</div>
+          {datosVictima?.foto ? (
+            <img
+              src={datosVictima.foto}
+              alt={nombreMenor}
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+              }}
+            />
+          ) : (
+            <>
+              <svg width="56" height="68" viewBox="0 0 56 68" fill="#bbb">
+                <circle cx="28" cy="18" r="14"/>
+                <path d="M2 68 C2 46 54 46 54 68Z"/>
+              </svg>
+              <div className="alerta-sofia-photo-label">Foto del menor</div>
+            </>
+          )}
         </div>
 
         <div style={{ textAlign: 'center', width: '100%' }}>
@@ -1425,8 +1442,10 @@ function AlertaScreen({ nombreMenor, provinciaNom, hora, fecha, contexto, genero
 
         <div className="alerta-sofia-datos">
           {[
+            { label: 'Edad',         value: typeof edad === 'number' ? `${edad} años` : edad },
             { label: 'Género',       value: genero   || '—'               },
             { label: 'Desaparición', value: `${horaLabel} · ${fechaLabel}` },
+            { label: 'Vestimenta',   value: vestimenta                     },
             { label: 'Contexto',     value: ctxLabel || '—'               },
             { label: 'Protocolo',    value: 'Ley 26.061 · CONASNAF'       },
           ].map(({ label, value }) => (
@@ -1465,7 +1484,7 @@ function SimuladorMiArgentina({
   isSimulating, showPush, setShowPush,
   nombreMenor, provinciaNom, hora, fecha, contexto, genero,
   ciudadanoScreen, setCiudadanoScreen,
-  onReporte, tiempoDisplay,
+  onReporte, tiempoDisplay, datosVictima,
 }) {
   const [loggedIn,      setLoggedIn]      = useState(false);
   const [pendingAlerta, setPendingAlerta] = useState(false);
@@ -1554,6 +1573,7 @@ function SimuladorMiArgentina({
                 onBack={() => setCiudadanoScreen('home')}
                 onReporte={onReporte}
                 tiempoDisplay={tiempoDisplay}
+                datosVictima={datosVictima}
               />
             )}
           </div>
@@ -1851,6 +1871,7 @@ export default function App() {
           setCiudadanoScreen={setCiudadanoScreen}
           onReporte={obj => setReportesCiudadanos(prev => [...prev, obj])}
           tiempoDisplay={relojFormateado}
+          datosVictima={datosVictima}
         />
       )}
 

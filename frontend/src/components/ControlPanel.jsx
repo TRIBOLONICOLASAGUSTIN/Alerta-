@@ -111,6 +111,34 @@ export default function ControlPanel({
             />
           </div>
 
+          <div>
+            <FieldLabel>Foto de la víctima</FieldLabel>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  const reader = new FileReader();
+                  reader.onload = (event) => {
+                    handleVictima("foto", event.target?.result);
+                  };
+                  reader.readAsDataURL(file);
+                }
+              }}
+              className="input-field"
+            />
+            {datosVictima?.foto && (
+              <div className="mt-2 w-full h-24 rounded border border-slate-600 overflow-hidden bg-slate-800">
+                <img
+                  src={datosVictima.foto}
+                  alt="Foto de la víctima"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            )}
+          </div>
+
           <div className="grid grid-cols-2 gap-2">
             <div>
               <FieldLabel>Edad</FieldLabel>

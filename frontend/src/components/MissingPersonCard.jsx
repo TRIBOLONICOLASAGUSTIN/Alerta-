@@ -4,7 +4,21 @@ const EXPEDIENTE_NUM = "N° 2024-00312-CBA";
 const CONTACTO       = "134 — SIFEBU";
 const ESTADO         = "BÚSQUEDA ACTIVA";
 
-function FotoRectangular({ nombre }) {
+function FotoRectangular({ nombre, fotoUrl }) {
+  // Si hay foto, mostrarla
+  if (fotoUrl) {
+    return (
+      <div className="w-24 h-24 bg-slate-800 rounded border border-slate-600 flex-shrink-0 flex flex-col items-center justify-center overflow-hidden">
+        <img
+          src={fotoUrl}
+          alt={nombre}
+          className="w-full h-full object-cover"
+        />
+      </div>
+    );
+  }
+
+  // Si no hay foto, mostrar iniciales
   const iniciales = (nombre || "?")
     .split(" ")
     .filter(Boolean)
@@ -45,7 +59,7 @@ export default function MissingPersonCard({ datosVictima }) {
 
       {/* ── Foto rectangular + datos ────────────────────────── */}
       <div className="flex items-start gap-3 pb-3 border-b border-slate-700/40">
-        <FotoRectangular nombre={nombre} />
+        <FotoRectangular nombre={nombre} fotoUrl={datosVictima?.foto} />
         <div className="flex flex-col flex-1 min-w-0">
           <p className="text-[10px] uppercase text-slate-500 tracking-widest mb-0.5">Nombre</p>
           <p className="text-sm font-bold text-slate-100 leading-tight break-words">{nombre}</p>

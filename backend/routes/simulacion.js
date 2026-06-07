@@ -19,6 +19,7 @@ function geovalladoCritico(radioKm, dispositivosBase) {
 
 const r2 = (n) => parseFloat(n.toFixed(2));
 
+// Retorna la fase actual (la de mayor índice activa)
 function getFase(escenario, tMin) {
   let faseActiva = escenario.fases[0];
   for (const fase of escenario.fases) {
@@ -35,20 +36,47 @@ function getFaseIdx(escenario, tMin) {
   return idx;
 }
 
+// Retorna TODAS las fases activas (acumulativas)
+function getFasesActivas(escenario, tMin) {
+  return escenario.fases.filter(fase => tMin >= fase.tInicio);
+}
+
+// Calcula el radio efectivo como la UNIÓN de todos los radios activos
+// El radio máximo de todas las fases activas
+function getRadioAcumulativo(escenario, tMin) {
+  const fasesActivas = getFasesActivas(escenario, tMin);
+  if (fasesActivas.length === 0) return escenario.fases[0].radio;
+  return Math.max(...fasesActivas.map(f => f.radio));
+}
+
+// Calcula el factor geográfico promedio de las fases activas
+// Ponderado por cuántas fases hay activas (entre más fases, más cobertura)
+function getFactorGeoAcumulativo(escenario, tMin) {
+  const fasesActivas = getFasesActivas(escenario, tMin);
+  if (fasesActivas.length === 0) return 1.0;
+  // Suma todos los factorGeo y divide por la cantidad de fases activas
+  // Esto simula que cada fase agrega más cobertura
+  return Math.min(1.0, fasesActivas.reduce((sum, f) => sum + (f.factorGeo || 1.0), 0) / fasesActivas.length);
+}
+
 function radioMaxDeProvincia(superficie) {
   return Math.sqrt(superficie / Math.PI);
 }
 
 // tiempoEfectivo = demoraLegal * 60 + tiempoSimulacion — determina fase y radio dinámico
+// AHORA: usa radio ACUMULATIVO (unión de todas las fases activas)
 function radiosDinamico(escenario, tiempoEfectivo, overrideVel, overrideRadioBase, superficie) {
   const vel  = overrideVel       || escenario.velEscape;
   const r0   = overrideRadioBase || escenario.radioBase;
   const fase = getFase(escenario, tiempoEfectivo);
+  const fasesActivas = getFasesActivas(escenario, tiempoEfectivo);
+  const radioAcumulativo = getRadioAcumulativo(escenario, tiempoEfectivo);
   const cap  = superficie ? radioMaxDeProvincia(superficie) : 5000;
   return {
-    radioFase:     Math.min(fase.radio, cap),
+    radioFase:     Math.min(radioAcumulativo, cap), // Radio máximo de todas las fases activas
     radioContinuo: Math.min(r0 + vel * (tiempoEfectivo / 60) * escenario.kGeo, cap),
     fase,
+    fasesActivas,   // Agregamos info de todas las fases activas
     cap,
   };
 }
@@ -148,13 +176,14 @@ router.post("/simular", (req, res) => {
 
   // La fase y el radio se calculan sobre tiempoEfectivo
   // Efecto clave: si demoraLegal=8h, el sistema arranca en Fase 3 directamente
-  const { radioFase, radioContinuo, cap } = radiosDinamico(
+  const { radioFase, radioContinuo, cap, fasesActivas } = radiosDinamico(
     escenario, tiempoEfectivo, overrideVel, overrideRadioBase, provincia.superficie
   );
 
   const faseIdx   = getFaseIdx(escenario, tiempoEfectivo);
   const fase      = escenario.fases[faseIdx];
-  const factorGeo = fase.factorGeo ?? 1.0;
+  // ACUMULATIVO: factor geo es la suma ponderada de todas las fases activas
+  const factorGeo = getFactorGeoAcumulativo(escenario, tiempoEfectivo);
 
   // D_escape al momento de la simulación incluye el tiempo que el secuestrador
   // ya lleva desplazándose desde que comenzó el crimen
@@ -206,10 +235,11 @@ router.post("/simular", (req, res) => {
   const serie = [];
   for (let t = 0; t <= Math.max(tiempoTotal, 360); t += pasoSerie) {
     const tEf  = demoraLegal * 60 + t;
-    const { radioFase: rf, fase: faseT } = radiosDinamico(
+    const { radioFase: rf, fasesActivas: fasesT } = radiosDinamico(
       escenario, tEf, overrideVel, overrideRadioBase, provincia.superficie
     );
-    const factorT    = faseT.factorGeo ?? 1.0;
+    // ACUMULATIVO: factor geo depende del número de fases activas
+    const factorT    = getFactorGeoAcumulativo(escenario, tEf);
     const rfCapped   = r2(Math.min(rf, capProvincia));
     const dispT      = dispositivosAlertados(densidad, escenario.compatCB, rfCapped, maxCompatibles, factorT);
     const dEscapeT   = r2(distanciaEscape(vel, t, demoraLegal));
@@ -225,6 +255,7 @@ router.post("/simular", (req, res) => {
       contiene:     !profugoT && rfCapped >= dEscapeT,
       profugo:      profugoT,
       faseIdx:      faseIdxT,
+      fasesActivas: fasesT, // Agregamos info de fases activas
     });
   }
 
@@ -293,8 +324,9 @@ router.post("/comparar", (req, res) => {
 
   const comparacion = Object.values(ESCENARIOS).map((escenario) => {
     const maxCompatibles = Math.floor(provincia.poblacion * escenario.compatCB);
-    const { radioFase, cap, fase } = radiosDinamico(escenario, tiempoEfectivo, null, null, provincia.superficie);
-    const factorGeo       = fase.factorGeo ?? 1.0;
+    const { radioFase, cap, fasesActivas } = radiosDinamico(escenario, tiempoEfectivo, null, null, provincia.superficie);
+    // ACUMULATIVO: factor geo depende del número de fases activas
+    const factorGeo       = getFactorGeoAcumulativo(escenario, tiempoEfectivo);
     const radioFaseCapped = r2(Math.min(radioFase, capProvincia));
     const dispTotal       = dispositivosAlertados(densidad, escenario.compatCB, radioFaseCapped, maxCompatibles, factorGeo);
     const cov             = coberturaPct(densidad, escenario.compatCB, escenario.fases, radioFaseCapped, cap, maxCompatibles);
